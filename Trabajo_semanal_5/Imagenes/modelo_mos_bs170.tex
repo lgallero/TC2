@@ -1,0 +1,64 @@
+\documentclass[tikz,border=8pt]{standalone}
+\usepackage[american]{circuitikz}
+\standaloneenv{circuitikz}
+
+\begin{document}
+
+\begin{circuitikz}[
+    line width=0.9pt,
+    every node/.style={font=\large}
+]
+
+% Coordenadas principales
+\coordinate (G)  at (0,3);
+\coordinate (A)  at (1.8,3);
+\coordinate (B)  at (4.2,3);
+\coordinate (D)  at (8,3);
+\coordinate (SB) at (4.2,0);
+\coordinate (S)  at (4.2,-1);
+
+% Terminal de gate y rama Cgd
+\draw
+    (G) node[ocirc]{}
+        node[above=5pt] {$G$}
+        node[left=12pt, draw=blue!70!black, rounded corners=2pt,
+              inner sep=3pt, text=blue!70!black] {$1$}
+    -- (A)
+    to[C, l=$C_{gd}$] (B)
+    -- (D) node[ocirc]{}
+        node[above=5pt] {$D$}
+        node[right=12pt, draw=blue!70!black, rounded corners=2pt,
+              inner sep=3pt, text=blue!70!black] {$2$};
+
+% Capacitor gate-source
+\draw
+    (A) node[circ]{}
+    to[C, l_=$C_{gs}$] (1.8,0)
+    -- (SB);
+
+% Fuente de corriente controlada, orientada de drain a source
+\draw
+    (5.0,3) node[circ]{}
+    to[cisource, l_=$g_m v_{gs}$] (5.0,0)
+    node[circ]{};
+
+% Capacitor drain-source
+\draw
+    (6.6,3) node[circ]{}
+    to[C, l=$C_{ds}$] (6.6,0)
+    node[circ]{};
+
+% Barra de source y terminal exterior
+\draw
+    (1.8,0) -- (6.6,0);
+
+\draw
+    (SB) node[circ]{}
+    -- (S) node[ocirc]{}
+        node[left=7pt] {$S$}
+        node[below=10pt, draw=blue!70!black, rounded corners=2pt,
+              inner sep=3pt, text=blue!70!black] {$3$};
+
+\end{circuitikz}
+
+\end{document}

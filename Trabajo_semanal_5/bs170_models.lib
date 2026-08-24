@@ -1,0 +1,59 @@
+* Modelos SPICE del BS170 suministrados en el enunciado.
+* El modelo simple se instancia con un elemento M.
+* El modelo detallado se instancia con un elemento X y se usa en la medicion.
+
+.MODEL BS170 NMOS (
++ VTO=1.824
++ KP=0.123
++ LAMBDA=0.012
++ RD=1.2
++ RS=1.2
++ RG=10
++ CBD=18p
++ CBS=0
++ CJ=0
++ CJO=24p
++ CGSO=30p
++ CGDO=10p
++ IS=1e-14
++ PB=0.8
++ MJ=0.5
++ FC=0.5
++)
+
+*-------------------------------------------------------------------
+* BS170 SPICE Model (Vishay / Siliconix)
+* Includes non-linear Ciss, Coss, Crss capacitances & Body Diode
+* Node 1: Drain (D) | Node 2: Gate (G) | Node 3: Source (S)
+*-------------------------------------------------------------------
+.SUBCKT BS170 1 2 3
+M1 9 7 8 8 MM L=10u W=30u
+D1 8 1 D_BODY
+RG 2 7 10
+RD 1 9 1.15
+RS 3 8 0.15
+CGS 7 8 24.5p
+CGD 7 1 3.5p
+DBODY 8 1 D_BD
+.MODEL MM NMOS (
++ LEVEL=3
++ VTO=2.1
++ KP=0.38
++ THETA=0.08
++ VMAX=1.5e5
++ ETA=0.015
++)
+.MODEL D_BODY D (
++ IS=1e-13
++ RS=0.1
++ N=1.0
++ BV=60
++ IBV=10u
++)
+.MODEL D_BD D (
++ IS=1e-15
++ CJO=28p
++ VJ=0.8
++ M=0.5
++)
+.ENDS BS170

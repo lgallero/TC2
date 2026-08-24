@@ -1,0 +1,41 @@
+SIMULACION DIRECTA DE PARAMETROS Y DEL BS170 EN DRAIN COMUN
+===========================================================
+
+Punto de polarizacion utilizado:
+  VD = 10 V
+  VG = 5 V
+  VS = 2 V
+
+El drain tiene AC 0, por lo que es el terminal comun de pequena senal.
+
+1) Simulacion.asc
+   Es el esquema principal. Utiliza:
+
+     .ac dec 100 10 1G
+     .net V(S,D) VG
+
+   La directiva .net calcula automaticamente todos los parametros de red.
+   Despues de ejecutar la simulacion, abrir Add Trace y seleccionar:
+
+     Y11(VG)
+     Y12(VG)
+     Y21(VG)
+     Y22(VG)
+
+   La fuente VG define el puerto de entrada gate-drain y V(S,D) define el
+   puerto de salida source-drain.
+
+   LBIAS=1 TH fija VS=2 V en continua. Para pequena senal presenta una
+   impedancia muy elevada y no cortocircuita el puerto de salida.
+
+2) Simulacion_source.asc
+   Se conserva como comprobacion alternativa mediante excitacion explicita
+   del source, pero no es necesaria para utilizar la directiva .net.
+
+El archivo medicion_y_drain_comun.cir ejecuta los dos ensayos de manera
+automatica con ngspice y genera los archivos de datos utilizados por Python.
+
+bs170_models.lib conserva los dos modelos suministrados en el enunciado.
+bs170_detailed.lib contiene solamente el subcircuito detallado empleado por
+LTspice, evitando advertencias causadas por parametros del modelo simple que
+LTspice no reconoce.

@@ -1,0 +1,38 @@
+* Medicion automatica de parametros Y del BS170 en drain comun.
+* Convencion: I1 e I2 entran al transistor por gate y source.
+* Punto de polarizacion: VD=10 V, VG=5 V, VS=2 V.
+
+.include bs170_detailed.lib
+
+VD D 0 DC 10 AC 0
+VG G 0 DC 5  AC 1
+VS S 0 DC 2  AC 0
+
+XDUT D G S BS170
+
+.control
+set noaskquit
+set wr_singlescale
+set wr_vecnames
+
+op
+print v(D) v(G) v(S) i(VD) i(VG) i(VS)
+
+* Ensayo 1: V1=1 V AC y V2=0. Entrega y11 e y21.
+ac dec 100 10 1G
+let y11 = -i(VG)
+let y21 = -i(VS)
+wrdata y_drain_comun_ensayo_gate.txt y11 y21
+
+* Ensayo 2: V1=0 y V2=1 V AC. Entrega y12 e y22.
+alter @VG[acmag] = 0
+alter @VS[acmag] = 1
+ac dec 100 10 1G
+let y12 = -i(VG)
+let y22 = -i(VS)
+wrdata y_drain_comun_ensayo_source.txt y12 y22
+
+quit
+.endc
+
+.end
