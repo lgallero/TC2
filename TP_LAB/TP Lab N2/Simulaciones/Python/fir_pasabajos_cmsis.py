@@ -36,9 +36,13 @@ F_STOP_HZ = 300.0
 PERDIDA_MAX_DB = 1.0
 ATENUACION_MIN_DB = 60.0
 
-# El corte se ubica en el centro de la transición si se deja en None.
-F_CORTE_HZ = None
 CANT_COEF = 81
+
+# firwin2 recibe directamente la plantilla frecuencia/ganancia. Igual que en
+# el ejemplo del docente, sus dos puntos interiores se desplazan hacia la
+# banda de transición para compensar el suavizado producido por la ventana.
+# Debe cumplirse: 0 <= MARGEN_PLANTILLA_HZ < (F_STOP_HZ-F_PASS_HZ)/2.
+MARGEN_PLANTILLA_HZ = 50.0
 
 VENTANAS = {
     "blackmanharris": "blackmanharris",
@@ -62,10 +66,28 @@ CARPETA_SALIDA = Path(__file__).resolve().parent / "resultados" / "fir_pasabajos
 # FUNCIONES DE DISEÑO Y PLANTILLA
 # =============================================================================
 
-def obtener_f_corte() -> float:
-    if F_CORTE_HZ is None:
-        return 0.5 * (F_PASS_HZ + F_STOP_HZ)
-    return float(F_CORTE_HZ)
+
+def obtener_plantilla_firwin2() -> tuple[np.ndarray, np.ndarray]:
+    """Devuelve los vectores de frecuencia y ganancia usados por firwin2."""
+    frecuencias_hz = np.asarray(
+        [
+            0.0,
+            F_PASS_HZ + MARGEN_PLANTILLA_HZ,
+            F_STOP_HZ - MARGEN_PLANTILLA_HZ,
+            FS_HZ / 2.0,
+        ],
+        dtype=np.float64,
+    )
+    ganancias = np.asarray(
+        [
+            1.0,
+            10.0 ** (-PERDIDA_MAX_DB / 20.0),
+            10.0 ** (-ATENUACION_MIN_DB / 20.0),
+            0.0,
+        ],
+        dtype=np.float64,
+    )
+    return frecuencias_hz, ganancias
 
 
 def validar_configuracion() -> None:
@@ -73,8 +95,11 @@ def validar_configuracion() -> None:
         raise ValueError("FS_HZ debe ser positiva.")
     if not 0.0 < F_PASS_HZ < F_STOP_HZ < FS_HZ / 2.0:
         raise ValueError("Se requiere 0 < F_PASS_HZ < F_STOP_HZ < FS_HZ/2.")
-    if not F_PASS_HZ < obtener_f_corte() < F_STOP_HZ:
-        raise ValueError("F_CORTE_HZ debe quedar dentro de la banda de transición.")
+    if not 0.0 <= MARGEN_PLANTILLA_HZ < 0.5 * (F_STOP_HZ - F_PASS_HZ):
+        raise ValueError(
+            "MARGEN_PLANTILLA_HZ debe ser no negativo y menor que la mitad "
+            "de la banda de transición."
+        )
     if CANT_COEF < 3:
         raise ValueError("CANT_COEF debe ser al menos 3.")
     if PERDIDA_MAX_DB <= 0.0 or ATENUACION_MIN_DB <= 0.0:
@@ -86,12 +111,13 @@ def validar_configuracion() -> None:
 
 
 def disenar_fir_pasabajos(ventana: object) -> np.ndarray:
-    return sig.firwin(
+    frecuencias_hz, ganancias = obtener_plantilla_firwin2()
+    return sig.firwin2(
         numtaps=CANT_COEF,
-        cutoff=obtener_f_corte(),
+        freq=frecuencias_hz,
+        gain=ganancias,
         window=ventana,
-        pass_zero="lowpass",
-        scale=True,
+        antisymmetric=False,
         fs=FS_HZ,
     )
 
@@ -164,7 +190,8 @@ def main() -> None:
     descripcion = (
         f"FIR pasabajos: fp={F_PASS_HZ:g} Hz, fstop={F_STOP_HZ:g} Hz, "
         f"Amax={PERDIDA_MAX_DB:g} dB, Amin={ATENUACION_MIN_DB:g} dB, "
-        f"taps={CANT_COEF}, ventana={VENTANA_A_EXPORTAR}"
+        f"taps={CANT_COEF}, método=firwin2, margen={MARGEN_PLANTILLA_HZ:g} Hz, "
+        f"ventana={VENTANA_A_EXPORTAR}"
     )
     rutas = exportar_fir_cmsis(
         CARPETA_SALIDA,

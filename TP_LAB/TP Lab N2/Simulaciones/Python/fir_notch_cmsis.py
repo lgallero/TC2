@@ -39,18 +39,24 @@ BW_3DB_HZ = 1.0
 # Un notch de 1 Hz a fs=1 kHz exige un FIR largo. Debe ser IMPAR porque la
 # banda de paso llega hasta Nyquist; un FIR simétrico de longitud par (tipo II)
 # está obligado a tener un cero en Nyquist.
-CANT_COEF = 4001
+CANT_COEF = 6001
 
-# firwin define sus cortes a -6 dB. Si esta opción está activa, el programa
-# corrige automáticamente el ancho interno hasta obtener el BW solicitado a
-# -3 dB. Después impone matemáticamente un cero exacto en F_NOTCH_HZ.
+# firwin2 interpola la plantilla cargada entre sus puntos. Si esta opción está
+# activa, el programa corrige automáticamente el ancho de esa plantilla hasta
+# obtener el BW solicitado a -3 dB. Después impone matemáticamente un cero
+# exacto en F_NOTCH_HZ.
 AJUSTAR_BW_AUTOMATICAMENTE = True
 BW_INTERNO_HZ = BW_3DB_HZ
 PUNTOS_AJUSTE_BW = 20001
 RANGO_BW_INTERNO = (0.01 * BW_3DB_HZ, 2.5 * BW_3DB_HZ)
 
+# Cantidad de puntos de la malla interna usada por firwin2. Debe ser mayor que
+# CANT_COEF. Aumentarla mejora la definición de plantillas muy angostas, a
+# costa de mayor tiempo de cálculo. No modifica PUNTOS_GRAFICO.
+NFREQS_FIRWIN2 = 65537
+
 # Se pueden agregar o quitar ventanas. El valor es exactamente el argumento
-# ``window`` aceptado por scipy.signal.firwin.
+# ``window`` aceptado por scipy.signal.firwin2.
 VENTANAS = {
     "blackmanharris": "blackmanharris",
     "hamming": "hamming",
@@ -96,6 +102,8 @@ def validar_configuracion() -> None:
         raise ValueError("VENTANA_A_EXPORTAR no aparece en el diccionario VENTANAS.")
     if PUNTOS_AJUSTE_BW < 1001:
         raise ValueError("PUNTOS_AJUSTE_BW debe ser al menos 1001.")
+    if NFREQS_FIRWIN2 <= CANT_COEF:
+        raise ValueError("NFREQS_FIRWIN2 debe ser mayor que CANT_COEF.")
     if not 0.0 < RANGO_BW_INTERNO[0] < RANGO_BW_INTERNO[1]:
         raise ValueError("RANGO_BW_INTERNO debe contener dos anchos positivos crecientes.")
 
@@ -112,28 +120,33 @@ def forzar_cero_en_f0(bb: np.ndarray) -> np.ndarray:
 
 
 def disenar_fir_notch(ventana: object, bw_interno_hz: float) -> np.ndarray:
-    """Diseña por ventana un bandstop y fuerza el cero en la frecuencia central."""
+    """Diseña el notch con firwin2 y fuerza el cero en la frecuencia central."""
     f_izq = F_NOTCH_HZ - bw_interno_hz / 2.0
     f_der = F_NOTCH_HZ + bw_interno_hz / 2.0
-    bb = sig.firwin(
+    frecuencias_hz = [0.0, f_izq, F_NOTCH_HZ, f_der, FS_HZ / 2.0]
+    ganancias = [1.0, 1.0, 0.0, 1.0, 1.0]
+    bb = sig.firwin2(
         numtaps=CANT_COEF,
-        cutoff=[f_izq, f_der],
-        pass_zero="bandstop",
+        freq=frecuencias_hz,
+        gain=ganancias,
+        nfreqs=NFREQS_FIRWIN2,
         window=ventana,
+        antisymmetric=False,
         fs=FS_HZ,
-        scale=True,
     )
     return forzar_cero_en_f0(bb)
 
 
 def medir_bw_rapido(bb: np.ndarray) -> float:
+    # El ajuste se hace sobre los coeficientes float32 que realmente usará ARM.
+    bb_arm = np.asarray(bb, dtype=np.float32).astype(np.float64)
     margen = max(5.0 * BW_3DB_HZ, 5.0)
     ff = np.linspace(
         max(0.0, F_NOTCH_HZ - margen),
         min(FS_HZ / 2.0, F_NOTCH_HZ + margen),
         PUNTOS_AJUSTE_BW,
     )
-    _, hh = sig.freqz(bb, 1.0, worN=ff, fs=FS_HZ)
+    _, hh = sig.freqz(bb_arm, 1.0, worN=ff, fs=FS_HZ)
     return float(medir_notch(ff, hh, F_NOTCH_HZ)["bw_3db_hz"])
 
 
@@ -189,7 +202,7 @@ def main() -> None:
 
     descripcion = (
         f"FIR notch: f0={F_NOTCH_HZ:g} Hz, BW@-3dB={BW_3DB_HZ:g} Hz, "
-        f"taps={CANT_COEF}, ventana={VENTANA_A_EXPORTAR}"
+        f"taps={CANT_COEF}, método=firwin2, ventana={VENTANA_A_EXPORTAR}"
     )
     rutas = exportar_fir_cmsis(
         CARPETA_SALIDA,
@@ -250,7 +263,7 @@ def main() -> None:
             fs=FS_HZ,
         )
         print(f"\n{nombre}:")
-        print(f"  bw_interno_firwin_hz: {anchos_internos[nombre]:.12g}")
+        print(f"  bw_interno_firwin2_hz: {anchos_internos[nombre]:.12g}")
         for clave, valor in metricas.items():
             print(f"  {clave}: {valor:.12g}")
         profundidad_exacta = 20.0 * np.log10(max(abs(h0[0]), np.finfo(float).tiny))
