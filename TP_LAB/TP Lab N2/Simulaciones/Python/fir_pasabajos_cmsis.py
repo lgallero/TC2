@@ -19,6 +19,7 @@ from filtros_cmsis_utils import (
     graficar_polos_ceros_fir,
     graficar_respuestas,
     imprimir_coeficientes_fir,
+    imprimir_configuracion_stm32,
     imprimir_rutas,
     magnitud_db,
     respuesta_ba,
@@ -52,8 +53,6 @@ PISO_GRAFICO_DB = -(ATENUACION_MIN_DB + 30.0)
 MOSTRAR_GRAFICOS = True
 GUARDAR_GRAFICOS = True
 MOSTRAR_COEFICIENTES_TERMINAL = True
-# Se imprimen varios taps por renglón para no saturar la terminal.
-COEFICIENTES_POR_LINEA_TERMINAL = 8
 
 DIGITOS_SIGNIFICATIVOS_C = 17
 CARPETA_SALIDA = Path(__file__).resolve().parent / "resultados" / "fir_pasabajos"
@@ -220,7 +219,6 @@ def main() -> None:
         imprimir_coeficientes_fir(
             seleccion,
             DIGITOS_SIGNIFICATIVOS_C,
-            COEFICIENTES_POR_LINEA_TERMINAL,
         )
 
     print("\nEXCEL CONSOLIDADO Y GRÁFICOS")
@@ -228,6 +226,12 @@ def main() -> None:
     if ruta_respuesta is not None:
         print(f"gráfico: {ruta_respuesta.resolve()}")
         print(f"polos y ceros: {ruta_pz.resolve()}")
+
+    imprimir_configuracion_stm32(
+        "FIR",
+        FS_HZ,
+        cantidad_coeficientes=seleccion.size,
+    )
 
     if MOSTRAR_GRAFICOS:
         plt.show()

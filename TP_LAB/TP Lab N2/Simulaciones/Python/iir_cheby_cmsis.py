@@ -19,6 +19,7 @@ from filtros_cmsis_utils import (
     graficar_polos_ceros_sos,
     graficar_respuestas,
     imprimir_coeficientes_iir,
+    imprimir_configuracion_stm32,
     imprimir_rutas,
     magnitud_db,
     respuesta_sos,
@@ -210,6 +211,13 @@ def main() -> None:
     if ruta_png is not None:
         print(f"gráfico: {ruta_png.resolve()}")
         print(f"polos y ceros: {ruta_pz.resolve()}")
+
+    imprimir_configuracion_stm32(
+        "IIR",
+        FS_HZ,
+        cantidad_coeficientes=cmsis.size,
+        cantidad_sos=cmsis.shape[0],
+    )
 
     if MOSTRAR_GRAFICOS:
         plt.show()

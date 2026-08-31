@@ -175,6 +175,7 @@ ORDEN_HOJAS_EXCEL = (
     "IIR Notch",
     "IIR Chebyshev",
     "FIR Pasabajos",
+    "IIR Bessel",
 )
 
 
@@ -184,6 +185,7 @@ def _nombre_hoja(nombre: str) -> str:
         "iir_notch": "IIR Notch",
         "iir_cheby": "IIR Chebyshev",
         "fir_pasabajos": "FIR Pasabajos",
+        "iir_bessel": "IIR Bessel",
     }
     return nombres.get(nombre, nombre.replace("_", " ").title())[:31]
 
@@ -340,6 +342,28 @@ def _guardar_hoja_coeficientes(
     return ruta_excel
 
 
+def guardar_bloque_fir_cmsis_txt(
+    carpeta: Path,
+    nombre: str,
+    bb: np.ndarray,
+    digitos_c: int = 17,
+) -> Path:
+    """Guarda la declaración FIR completa en una única línea de código C."""
+    carpeta.mkdir(parents=True, exist_ok=True)
+    bb_cmsis = np.asarray(bb, dtype=np.float64)[::-1].astype(np.float32)
+    coeficientes = ", ".join(
+        _float32_c(valor, digitos_c) for valor in bb_cmsis
+    )
+    bloque = (
+        "float32_t float_fir_taps[FIR_TAP_NUM] = { "
+        + coeficientes
+        + " };"
+    )
+    ruta_txt = carpeta / f"{nombre}_coeficientes_stm32_una_linea.txt"
+    ruta_txt.write_text(bloque, encoding="utf-8")
+    return ruta_txt
+
+
 def exportar_fir_cmsis(
     carpeta: Path,
     nombre: str,
@@ -374,7 +398,16 @@ def exportar_fir_cmsis(
         ),
         digitos_c=digitos_c,
     )
-    return {"excel": ruta_excel}
+    ruta_txt = guardar_bloque_fir_cmsis_txt(
+        carpeta,
+        nombre,
+        bb64,
+        digitos_c,
+    )
+    return {
+        "excel": ruta_excel,
+        "TXT STM32 (una línea)": ruta_txt,
+    }
 
 
 def exportar_sos_cmsis(
@@ -425,20 +458,14 @@ def exportar_sos_cmsis(
 def imprimir_coeficientes_fir(
     bb: np.ndarray,
     digitos_c: int = 17,
-    coeficientes_por_linea: int = 8,
 ) -> None:
-    """Muestra solamente el bloque FIR de CMSIS listo para pegar en app.c."""
-    if coeficientes_por_linea < 1:
-        raise ValueError("coeficientes_por_linea debe ser mayor o igual que 1.")
-
+    """Muestra el bloque FIR de CMSIS con un coeficiente por renglón."""
     bb64 = np.asarray(bb, dtype=np.float64)
     bb_cmsis = bb64[::-1].astype(np.float32)
     print("\nCOEFICIENTES PARA STM32/CMSIS — COPIAR Y PEGAR")
     print("float32_t float_fir_taps[FIR_TAP_NUM] = {")
-    for inicio in range(0, bb_cmsis.size, coeficientes_por_linea):
-        grupo = bb_cmsis[inicio : inicio + coeficientes_por_linea]
-        texto = ", ".join(_float32_c(valor, digitos_c) for valor in grupo)
-        print(f"    {texto},")
+    for valor in bb_cmsis:
+        print(f"    {_float32_c(valor, digitos_c)},")
     print("};")
 
 
@@ -553,7 +580,23 @@ def graficar_polos_ceros_sos(
     ruta_png: Path | None = None,
     mostrar: bool = True,
 ) -> plt.Figure:
-    ceros, polos, _ = signal.sos2zpk(np.asarray(sos, dtype=np.float64))
+    sos_array = np.asarray(sos, dtype=np.float64)
+    ceros, polos, _ = signal.sos2zpk(sos_array)
+
+    # SciPy completa una sección de primer orden como biquad agregando un cero
+    # y un polo en z=0. Ese par se cancela exactamente y no pertenece al filtro
+    # mínimo, por lo que se retira del diagrama para evitar confusiones.
+    secciones_primer_orden = min(
+        int(np.count_nonzero(np.isclose(sos_array[:, 2], 0.0, atol=1.0e-14))),
+        int(np.count_nonzero(np.isclose(sos_array[:, 5], 0.0, atol=1.0e-14))),
+    )
+    for _ in range(secciones_primer_orden):
+        indice_cero = int(np.argmin(np.abs(ceros)))
+        indice_polo = int(np.argmin(np.abs(polos)))
+        if abs(ceros[indice_cero]) < 1.0e-7 and abs(polos[indice_polo]) < 1.0e-7:
+            ceros = np.delete(ceros, indice_cero)
+            polos = np.delete(polos, indice_polo)
+
     return graficar_polos_ceros(ceros, polos, titulo, ruta_png, mostrar)
 
 
@@ -750,3 +793,55 @@ def medir_notch(
 def imprimir_rutas(rutas: Mapping[str, Path]) -> None:
     for tipo, ruta in rutas.items():
         print(f"{tipo}: {ruta.resolve()}")
+
+
+def imprimir_configuracion_stm32(
+    tipo_filtro: str,
+    fs_hz: float,
+    cantidad_coeficientes: int,
+    cantidad_sos: int | None = None,
+) -> None:
+    """Imprime al final los cambios mínimos que deben realizarse en STM32."""
+    tipo = tipo_filtro.strip().upper()
+    if tipo not in {"FIR", "IIR"}:
+        raise ValueError("tipo_filtro debe ser 'FIR' o 'IIR'.")
+    if cantidad_coeficientes < 1:
+        raise ValueError("cantidad_coeficientes debe ser mayor o igual que 1.")
+
+    frecuencias_definidas = {
+        1000: "SAMPLE_RATE_1K",
+        20000: "SAMPLE_RATE_20K",
+        40000: "SAMPLE_RATE_40K",
+    }
+    fs_entera = int(round(float(fs_hz)))
+    if np.isclose(fs_hz, fs_entera):
+        macro_fs = frecuencias_definidas.get(fs_entera, f"{fs_entera}ul")
+    else:
+        macro_fs = f"{float(fs_hz):.12g}  /* Hz: adaptar a un entero para el timer */"
+
+    print("\n" + "=" * 72)
+    print("CONFIGURACIÓN QUE DEBÉS COPIAR/MODIFICAR EN EL PROGRAMA STM32")
+    print("=" * 72)
+    print("\nArchivo: app/src/app.c")
+    print(f"  filter_type_t filter = {tipo};")
+
+    if tipo == "FIR":
+        print("  Reemplazar float_fir_taps con el bloque FIR impreso arriba.")
+        print("\nArchivo: app/inc/filter.h")
+        print(f"  #define FIR_TAP_NUM {cantidad_coeficientes}")
+    else:
+        if cantidad_sos is None or cantidad_sos < 1:
+            raise ValueError("Para un IIR, cantidad_sos debe ser mayor o igual que 1.")
+        esperados = 5 * cantidad_sos
+        if cantidad_coeficientes != esperados:
+            raise ValueError(
+                "CMSIS DF1 necesita exactamente 5 coeficientes por cada sección SOS."
+            )
+        print("  Reemplazar float_iir_taps con el bloque IIR impreso arriba.")
+        print("  float32_t iir_state[4 * IIR_SOS_NUM];")
+        print("\nArchivo: app/inc/filter.h")
+        print(f"  #define IIR_TAP_NUM {cantidad_coeficientes}")
+        print(f"  #define IIR_SOS_NUM {cantidad_sos}")
+
+    print(f"  #define SAMPLE_RATE {macro_fs}")
+    print("\nNo es necesario modificar SAMPLES_PER_BLOCK para cambiar de filtro.")

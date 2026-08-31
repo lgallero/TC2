@@ -21,6 +21,7 @@ from filtros_cmsis_utils import (
     graficar_polos_ceros_fir,
     graficar_respuestas,
     imprimir_coeficientes_fir,
+    imprimir_configuracion_stm32,
     imprimir_rutas,
     medir_notch,
     respuesta_ba,
@@ -66,8 +67,6 @@ PISO_GRAFICO_DB = -160.0
 MOSTRAR_GRAFICOS = True
 GUARDAR_GRAFICOS = True
 MOSTRAR_COEFICIENTES_TERMINAL = True
-# Se imprimen varios taps por renglón para no saturar la terminal.
-COEFICIENTES_POR_LINEA_TERMINAL = 8
 
 # arm_fir_f32 usa float32. Nueve cifras significativas ya garantizan el
 # round-trip exacto; se muestran 17 para conservar todos los decimales visibles.
@@ -261,7 +260,6 @@ def main() -> None:
         imprimir_coeficientes_fir(
             filtros[VENTANA_A_EXPORTAR],
             DIGITOS_SIGNIFICATIVOS_C,
-            COEFICIENTES_POR_LINEA_TERMINAL,
         )
 
     print("\nEXCEL CONSOLIDADO Y GRÁFICOS")
@@ -270,6 +268,12 @@ def main() -> None:
         print(f"gráfico: {ruta_general.resolve()}")
         print(f"zoom: {ruta_zoom.resolve()}")
         print(f"polos y ceros: {ruta_pz.resolve()}")
+
+    imprimir_configuracion_stm32(
+        "FIR",
+        FS_HZ,
+        cantidad_coeficientes=filtros[VENTANA_A_EXPORTAR].size,
+    )
 
     if MOSTRAR_GRAFICOS:
         plt.show()
