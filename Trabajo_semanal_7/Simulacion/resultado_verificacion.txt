@@ -1,0 +1,24 @@
+VERIFICACION TS7 CON PYTC2
+1b interpreta F como admitancia Y=F, como en el desarrollo manuscrito.
+ejercicio1a: funcion de la red menos funcion propuesta = 0
+ejercicio1b: funcion de la red menos funcion propuesta = 0
+ejercicio1c: funcion de la red menos funcion propuesta = 0
+ejercicio1d: funcion de la red menos funcion propuesta = 0
+ejercicio2: funcion de la red menos funcion propuesta = 0
+Foster: k0=3/2, k_infinito=1, ki=[[4, 2]]; F=s + s/(2*(s**2 + 2)) + 3/(2*s)
+Cauer infinito: [s, s/2, 4*s, s/6]; remanente=0
+Cauer DC: [3/(2*s), 4/(5*s), 25/(2*s), 1/(5*s)]; remanente=0
+2: Z_C1(s) = 1/s
+2: Z2(s) = (5*s**3 + 24*s)/(s**4 + 18*s**2 + 48)
+2: Y_L1(s) = 2/s
+2: Y4(s) = (s**3 + 8*s)/(5*s**2 + 24)
+2: Z4(s) = (5*s**2 + 24)/(s**3 + 8*s)
+2: Z_tanque(s) = 2*s/(s**2 + 8)
+2: Z6(s) = 3/s
+2: Z_C3(s) = 3/s
+2: C1=1, L1=1/2, L2=1/4, C2=1/2, C3=1/3
+ejercicio1a: error relativo maximo de 15001 puntos AC = 1.093e-10
+ejercicio1b: error relativo maximo de 15001 puntos AC = 3.464e-13
+ejercicio1c: error relativo maximo de 15001 puntos AC = 6.770e-12
+ejercicio1d: error relativo maximo de 15001 puntos AC = 6.025e-11
+ejercicio2: error relativo maximo de 15001 puntos AC = 2.338e-12
