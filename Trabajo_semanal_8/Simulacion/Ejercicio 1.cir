@@ -1,0 +1,13 @@
+TS8 - Ejercicio 1 - K=1
+V1 in 0 AC 1
+C1 in 0 1
+R1 in 0 0.2233343838595818
+R2 in n1 0.006037484163867526
+L1 n1 out 0.04166666666666666 Rser=0
+C2 out 0 27.39424941067657
+R3 out 0 0.04268973855516951
+.ac dec 1000 0.001 100
+.meas AC z_baja FIND mag(V(in)/(-I(V1))) AT=0.001
+.meas AC z_alta FIND mag(V(in)/(-I(V1))) AT=100
+* Impedancia de entrada: V(in)/(-I(V1))
+.end

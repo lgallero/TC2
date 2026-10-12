@@ -1,0 +1,12 @@
+TS8 - Ejercicio 1 - Verificacion del circuito grafico de LTspice
+Puntos del barrido: 15001
+Error absoluto maximo: 2.141332e-15 ohm
+Error relativo maximo: 1.029742e-14
+Z a 0.001 Hz: 0.03999845876 ohm
+Z a 100 Hz: 0.001591605773 ohm
+Pendiente 0.001 a 0.01 Hz: -0.033066457 dB/decada
+Pendiente 10 a 100 Hz: -20.030391 dB/decada
+L1 ideal: Rser=0.
+Las raices complejas se verifican algebraicamente; los factores auxiliares
+de LTspice indican las frecuencias naturales, no las posiciones completas
+de los polos ni los extremos de la impedancia.
