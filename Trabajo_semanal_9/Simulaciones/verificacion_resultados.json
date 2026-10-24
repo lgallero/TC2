@@ -1,0 +1,50 @@
+[
+  {
+    "ejercicio": 1,
+    "puntos": 7001,
+    "error_absoluto_maximo": 1.2692077533148105e-10,
+    "error_relativo_maximo_fuera_del_nulo": 6.492062989353688e-07,
+    "frecuencia_cero_teorica_hz": 0.039788735772973836,
+    "frecuencia_minimo_barrido_hz": 0.039810717055344204,
+    "modulo_minimo_barrido_db": -95.25100943159515,
+    "modulo_baja_db": -88.11885715804195,
+    "modulo_alta_db": -1.3751011706747622e-08,
+    "parametros": {
+      "ejercicio": 1,
+      "error_normalizado_excitacion": 3.0847245402266016e-07,
+      "error_normalizado_parametro_transferencia": 3.0847245402266016e-07
+    }
+  },
+  {
+    "ejercicio": 2,
+    "puntos": 7001,
+    "error_absoluto_maximo": 6.731800026102354e-16,
+    "error_relativo_maximo_fuera_del_nulo": 2.42189793739042e-14,
+    "frecuencia_cero_teorica_hz": 0.477464829275686,
+    "frecuencia_minimo_barrido_hz": 0.4775292736575972,
+    "modulo_minimo_barrido_db": -100.01068100752113,
+    "modulo_baja_db": -3.810057614617712e-07,
+    "modulo_alta_db": -95.04844953609442,
+    "parametros": {
+      "ejercicio": 2,
+      "error_normalizado_excitacion": 1.4845962878260245e-13,
+      "error_normalizado_parametro_transferencia": 1.482129391427658e-13
+    }
+  },
+  {
+    "ejercicio": 3,
+    "puntos": 7001,
+    "error_absoluto_maximo": 6.361118431981333e-11,
+    "error_relativo_maximo_fuera_del_nulo": 6.49206298935797e-07,
+    "frecuencia_cero_teorica_hz": 0.039788735772973836,
+    "frecuencia_minimo_barrido_hz": 0.039810717055344204,
+    "modulo_minimo_barrido_db": -101.25100943169457,
+    "modulo_baja_db": -94.11885715804195,
+    "modulo_alta_db": -6.00000001375101,
+    "parametros": {
+      "ejercicio": 3,
+      "error_normalizado_excitacion": 3.0847245402265015e-07,
+      "error_normalizado_parametro_transferencia": 3.084724540226502e-07
+    }
+  }
+]
