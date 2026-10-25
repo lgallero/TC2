@@ -13,6 +13,15 @@
       "ejercicio": 1,
       "error_normalizado_excitacion": 3.0847245402266016e-07,
       "error_normalizado_parametro_transferencia": 3.0847245402266016e-07
+    },
+    "cuadripolos": {
+      "puntos": 7001,
+      "errores_normalizados": {
+        "Z11": 3.0847243402059576e-07,
+        "Z21": 3.084724339227496e-07,
+        "Z12": 3.084724337878005e-07,
+        "Z22": 3.056575071848924e-07
+      }
     }
   },
   {
@@ -29,6 +38,15 @@
       "ejercicio": 2,
       "error_normalizado_excitacion": 1.4845962878260245e-13,
       "error_normalizado_parametro_transferencia": 1.482129391427658e-13
+    },
+    "cuadripolos": {
+      "puntos": 7001,
+      "errores_normalizados": {
+        "Z11": 2.4015573841482026e-10,
+        "Z21": 2.4015583610037643e-10,
+        "Z12": 2.401558361005325e-10,
+        "Z22": 2.401560244913169e-10
+      }
     }
   },
   {
@@ -45,6 +63,15 @@
       "ejercicio": 3,
       "error_normalizado_excitacion": 3.0847245402265015e-07,
       "error_normalizado_parametro_transferencia": 3.084724540226502e-07
+    },
+    "cuadripolos": {
+      "puntos": 7001,
+      "errores_normalizados": {
+        "Z11": 3.084724350485051e-07,
+        "Z21": 3.084724353449196e-07,
+        "Z12": 3.084724353939177e-07,
+        "Z22": 3.035223427386051e-07
+      }
     }
   }
 ]
